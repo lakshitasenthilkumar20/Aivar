@@ -1,0 +1,20 @@
+{
+  "sales_agent": {
+    "allowed_tools": [
+      "GET_CUSTOMER",
+      "UPDATE_CUSTOMER"
+    ]
+  },
+  "support_agent": {
+    "allowed_tools": [
+      "GET_CUSTOMER"
+    ]
+  },
+  "admin": {
+    "allowed_tools": [
+      "GET_CUSTOMER",
+      "UPDATE_CUSTOMER",
+      "DELETE_CUSTOMER"
+    ]
+  }
+}

@@ -1,0 +1,647 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Permission Proxy — Governance Dashboard</title>
+<style>
+  :root{
+    --bg:#0b0f14;
+    --panel:#101720;
+    --panel-2:#161f2b;
+    --border:#232c39;
+    --text:#e6ebf0;
+    --text-dim:#8b96a5;
+    --text-faint:#5b6472;
+    --accent:#35c7c0;
+    --accent-dim:#1d3d3b;
+    --danger:#ef5f5f;
+    --danger-dim:#3d2020;
+    --warning:#f2b84b;
+    --warning-dim:#40320f;
+    --mono:'SF Mono', 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+    --sans:-apple-system, 'Inter', 'Segoe UI', sans-serif;
+    --radius:10px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    padding:48px 32px 100px;
+    font-size:17px;
+  }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+  }
+
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:36px;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+
+  .brand-dot{
+    width:13px;
+    height:13px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 6px var(--accent-dim);
+  }
+
+  h1{
+    font-size:26px;
+    font-weight:600;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--text-faint);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+
+  .conn{
+    font-family:var(--mono);
+    font-size:15px;
+    color:var(--text-dim);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .conn input{
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    font-family:var(--mono);
+    font-size:15px;
+    padding:8px 12px;
+    border-radius:7px;
+    width:300px;
+  }
+  .conn input:focus{ outline:1px solid var(--accent); color:var(--text); }
+
+  section{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:28px;
+    margin-bottom:22px;
+  }
+
+  .section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+
+  .section-label{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .section-head .section-label{ margin-bottom:0; }
+
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    font-family:var(--mono);
+    font-size:12.5px;
+    padding:7px 14px;
+    border-radius:7px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .btn-ghost:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn-ghost svg{ width:13px; height:13px; }
+
+  /* Role switcher / stat cards share this grid */
+  .roles{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .role-card{
+    flex:1;
+    min-width:240px;
+    background:var(--panel-2);
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    padding:22px 24px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s, transform .1s;
+  }
+  .role-card:hover{ border-color:#38424f; transform:translateY(-1px); }
+  .role-card.active{
+    border-color:var(--accent);
+    background:linear-gradient(180deg, rgba(53,199,192,0.1), rgba(53,199,192,0.02));
+  }
+
+  .role-name{
+    font-size:18px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .role-badge{
+    font-family:var(--mono);
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:5px;
+    background:var(--accent-dim);
+    color:var(--accent);
+    visibility:hidden;
+  }
+  .role-card.active .role-badge{ visibility:visible; }
+
+  .role-scope{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--text-dim);
+    margin-top:8px;
+  }
+
+  .role-token-status{
+    margin-top:12px;
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--text-faint);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .token-dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--text-faint);
+  }
+  .role-card.token-set .token-dot{ background:var(--accent); }
+  .role-card.token-set .role-token-status{ color:var(--accent); }
+
+  /* Stat cards (reuse role-card look) */
+  .stats{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .stat-card{
+    flex:1;
+    min-width:200px;
+    background:var(--panel-2);
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    padding:22px 24px;
+  }
+  .stat-label{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+  }
+  .stat-number{
+    font-family:var(--mono);
+    font-size:38px;
+    font-weight:600;
+    margin-top:8px;
+    color:var(--text);
+  }
+  .stat-card.stat-danger .stat-number{ color:var(--danger); }
+  .stat-card.stat-warning .stat-number{ color:var(--warning); }
+  .stat-card.stat-accent .stat-number{ color:var(--accent); }
+
+  /* Command bar */
+  .cmdbar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+
+  .cmd-prefix{
+    font-family:var(--mono);
+    color:var(--accent);
+    font-size:19px;
+    flex-shrink:0;
+  }
+
+  #query{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:17px;
+    padding:16px 18px;
+    border-radius:9px;
+  }
+  #query:focus{ outline:1px solid var(--accent); }
+  #query::placeholder{ color:var(--text-faint); }
+
+  button.submit{
+    background:var(--accent);
+    color:#04211f;
+    border:none;
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:16px;
+    padding:16px 28px;
+    border-radius:9px;
+    cursor:pointer;
+    white-space:nowrap;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  button.submit:hover{ filter:brightness(1.08); }
+  button.submit:disabled{ opacity:0.7; cursor:default; }
+
+  .spinner{
+    width:15px;
+    height:15px;
+    border-radius:50%;
+    border:2px solid rgba(4,33,31,0.35);
+    border-top-color:#04211f;
+    animation:spin .7s linear infinite;
+    display:none;
+  }
+  button.submit.loading .spinner{ display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .hint{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--text-faint);
+    margin-top:14px;
+  }
+
+  /* Result panel */
+  #resultPanel{ display:none; }
+
+  .status-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+
+  .status-pill{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:0.05em;
+    padding:6px 14px;
+    border-radius:6px;
+  }
+  .status-pill.allowed{ background:var(--accent-dim); color:var(--accent); }
+  .status-pill.denied{ background:var(--danger-dim); color:var(--danger); }
+  .status-pill.open{ background:var(--warning-dim); color:var(--warning); }
+  .status-pill.resolved{ background:var(--accent-dim); color:var(--accent); }
+
+  .status-reason{
+    font-family:var(--mono);
+    font-size:15px;
+    color:var(--text-dim);
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:var(--mono);
+    font-size:15px;
+  }
+  th,td{
+    text-align:left;
+    padding:13px 16px;
+    border-bottom:1px solid var(--border);
+  }
+  th{
+    color:var(--text-faint);
+    font-weight:500;
+    text-transform:uppercase;
+    font-size:12px;
+    letter-spacing:0.05em;
+    position:sticky;
+    top:0;
+    background:var(--panel-2);
+  }
+  td{ color:var(--text); }
+  tr:last-child td{ border-bottom:none; }
+  tbody tr:nth-child(even) td{ background:rgba(255,255,255,0.015); }
+
+  .table-scroll{
+    max-height:350px;
+    overflow-y:auto;
+    border:1px solid var(--border);
+    border-radius:8px;
+  }
+  .table-scroll table{ font-size:14px; }
+
+  .empty-state{
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--text-faint);
+    padding:22px 16px;
+    text-align:center;
+  }
+
+  /* AI decision panel */
+  .decision-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:16px;
+  }
+  .decision-item{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:16px 18px;
+  }
+  .decision-label{
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+  }
+  .decision-value{
+    font-family:var(--mono);
+    font-size:15px;
+    color:var(--text);
+    margin-top:6px;
+    font-weight:600;
+  }
+
+  /* Alert modal removed — backend-driven alerts render in the Security Alerts table */
+
+  @media (max-width: 720px){
+    .decision-grid{ grid-template-columns:1fr 1fr; }
+    .stats, .roles{ flex-direction:column; }
+    .conn input{ width:100%; }
+    .conn{ width:100%; }
+    header{ flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <div>
+        <h1>AI Permission Proxy</h1>
+        <div class="eyebrow">AI governance dashboard</div>
+      </div>
+    </div>
+    <div class="conn">
+      API base
+      <input id="apiBase" type="text" value="https://g0nwr1t6u4.execute-api.ap-south-1.amazonaws.com/Prod/hello/">
+    </div>
+  </header>
+
+  <section>
+    <div class="section-label">Active identity</div>
+    <div class="roles" id="roles"></div>
+    <div class="hint"></div>
+  </section>
+
+  <section>
+    <div class="section-label">Request</div>
+    <div class="cmdbar">
+      <span class="cmd-prefix">&gt;</span>
+      <input id="query" type="text" placeholder="e.g. Show customer 1001, or Change customer 1004's city to Chennai, or Delete customer 1004" spellcheck="false">
+      <button class="submit" id="submitBtn" onclick="sendRequest()">
+        <span class="spinner"></span>
+        <span id="submitLabel">Run</span>
+      </button>
+    </div>
+    <div class="hint">Describe what you want in plain language — the AI agent decides the tool call.</div>
+  </section>
+
+  <section id="resultPanel">
+    <div class="section-label">Result</div>
+    <div class="status-row">
+      <span id="statusPill" class="status-pill"></span>
+      <span id="statusReason" class="status-reason"></span>
+    </div>
+    <div id="resultTableWrap" style="display:none;">
+      <div class="table-scroll">
+        <table id="resultTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="resultEmpty" class="empty-state" style="display:none;">No customer data returned.</div>
+  </section>
+
+
+
+
+</div>
+
+<script>
+  // ── Config: paste each role's real JWT here before demoing/deploying ──
+  // Leave a token blank to send the request with no Authorization header.
+  const ROLES = [
+{
+    id:"support_agent",
+    name:"Support Agent",
+    scope:"Read Customer",
+    token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic3VwcG9ydCIsInJvbGUiOiJzdXBwb3J0X2FnZW50In0.fbFglFt_Gf0SCkqvVlZiKGoQzMCfSwYrUivc3oIOMtU"
+},
+{
+    id:"sales_agent",
+    name:"Sales Agent",
+    scope:"Read + Update",
+    token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic2FsZXMiLCJyb2xlIjoic2FsZXNfYWdlbnQifQ.TiuFbVeIrQ8cFTN4VKuPh3KqPI8R8ecS306wmvLTsN0"
+},
+{
+    id:"admin",
+    name:"Admin",
+    scope:"All Access",
+    token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifQ.XDPcIhJ6doTdNq-r1U4-LbXLiXbFtl1k6qVMNLlOdPc"
+}
+];
+  // ────────────────────────────────────────────────────────────────────
+
+  let activeRoleId = ROLES[0].id;
+
+  function renderRoles(){
+    const container = document.getElementById('roles');
+    container.innerHTML = '';
+    ROLES.forEach(role => {
+      const hasToken = !!role.token && !role.token.startsWith('PASTE_');
+      const card = document.createElement('div');
+      card.className = 'role-card'
+        + (role.id === activeRoleId ? ' active' : '')
+        + (hasToken ? ' token-set' : '');
+      card.onclick = () => {
+        activeRoleId = role.id;
+        renderRoles();
+      };
+      card.innerHTML = `
+        <div class="role-name">${role.name}<span class="role-badge">active</span></div>
+        <div class="role-scope">${role.scope}</div>
+        <div class="role-token-status">
+          <span class="token-dot"></span>${hasToken ? 'token loaded' : 'no token set'}
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+  renderRoles();
+
+  // ── Request flow ────────────────────────────────────────────────────
+  async function sendRequest(){
+    const btn = document.getElementById('submitBtn');
+    const label = document.getElementById('submitLabel');
+    const query = document.getElementById('query').value.trim();
+    const base = document.getElementById('apiBase').value.trim().replace(/\/$/, '');
+    const role = ROLES.find(r => r.id === activeRoleId);
+
+    if (!query) return;
+
+    btn.disabled = true;
+    btn.classList.add('loading');
+    label.textContent = 'Running...';
+
+    let data;
+    try {
+      const hasToken = role.token && !role.token.startsWith('PASTE_');
+      const res = await fetch(`${base}/agent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(hasToken ? { 'Authorization': `Bearer ${role.token}` } : {})
+        },
+        body: JSON.stringify({ prompt: query })
+      });
+      const text = await res.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { status: 'ERROR', reason: text };
+      }
+    } catch (err) {
+      data = { status: 'ERROR', reason: err.message };
+    }
+
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    label.textContent = 'Run';
+
+    renderResult(data);
+    
+  }
+
+  function renderResult(data){
+
+    const panel = document.getElementById("resultPanel");
+    const pill = document.getElementById("statusPill");
+    const reason = document.getElementById("statusReason");
+    const wrap = document.getElementById("resultTableWrap");
+    const empty = document.getElementById("resultEmpty");
+
+    const table = document.getElementById("resultTable");
+    const thead = table.querySelector("thead");
+    const tbody = table.querySelector("tbody");
+
+    panel.style.display = "block";
+
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    const status = (data.status || "ERROR").toUpperCase();
+
+    pill.textContent = status;
+
+    pill.className =
+        "status-pill " +
+        (status === "ALLOWED" ? "allowed" : "denied");
+
+    reason.textContent =
+        data.reason ||
+        data.message ||
+        "";
+
+    const payload =
+        data.result ??
+        data.data ??
+        null;
+
+    if(payload && typeof payload === "object"){
+
+        const rows = Array.isArray(payload)
+            ? payload
+            : [payload];
+
+        const columns = Object.keys(rows[0]);
+
+        thead.innerHTML =
+            "<tr>" +
+            columns.map(c=>`<th>${c}</th>`).join("") +
+            "</tr>";
+
+        tbody.innerHTML = rows.map(r=>
+            "<tr>" +
+            columns.map(c=>`<td>${r[c] ?? ""}</td>`).join("") +
+            "</tr>"
+        ).join("");
+
+        wrap.style.display="block";
+        empty.style.display="none";
+    }
+    else{
+
+        wrap.style.display="none";
+
+        empty.style.display="block";
+
+        empty.textContent =
+            data.message ||
+            data.reason ||
+            "No customer data returned.";
+    }
+}
+
+  
+
+  document.getElementById('query').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendRequest();
+  });
+</script>
+
+</body>
+</html>
