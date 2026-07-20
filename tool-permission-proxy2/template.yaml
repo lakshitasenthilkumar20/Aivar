@@ -8,15 +8,21 @@ Globals:
     Timeout: 15
     Architectures:
       - arm64
-    Api:
+  Api:
 
-      Cors:
+    Cors:
 
-        AllowMethods: "'OPTIONS,GET,POST,PUT,DELETE'"
+      AllowMethods: "'OPTIONS,GET,POST,PUT,DELETE'"
 
-        AllowHeaders: "'Content-Type,Authorization'"
+      AllowHeaders: "'Content-Type,Authorization'"
 
-        AllowOrigin: "'*'"
+      AllowOrigin: "'*'"
+
+Parameters:
+  GeminiApiKey:
+    Type: String
+    NoEcho: true
+    Description: API key for Google Gemini
 
 Resources:
   HelloWorldFunction:
@@ -91,14 +97,14 @@ Resources:
   AIAgentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Environment:
-        Variables:
-          GEMINI_API_KEY: "AIzaSyAjJQDxY1-WnWPxJAsK4hZZ_aR9KVwJPDE"
       CodeUri: ai_agent/
       Handler: app.lambda_handler
       Runtime: python3.13
       Timeout: 15
       MemorySize: 512
+      Environment:
+        Variables:
+          GEMINI_API_KEY: !Ref GeminiApiKey
       Events:
         Agent:
           Type: Api
@@ -129,6 +135,7 @@ Resources:
       KeySchema:
         - AttributeName: alert_id
           KeyType: HASH
+  
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

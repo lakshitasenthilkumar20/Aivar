@@ -12,6 +12,13 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
+CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE"
+}
+
 get_customer_tool = types.FunctionDeclaration(
     name="GET_CUSTOMER",
     description="""
@@ -67,17 +74,11 @@ Modify customer 1004 occupation to Doctor
         type=types.Type.OBJECT,
         properties={
             "customer_id": types.Schema(type=types.Type.STRING),
-
             "name": types.Schema(type=types.Type.STRING),
-
             "city": types.Schema(type=types.Type.STRING),
-
             "country": types.Schema(type=types.Type.STRING),
-
             "membership": types.Schema(type=types.Type.STRING),
-
             "occupation": types.Schema(type=types.Type.STRING),
-
             "account_status": types.Schema(type=types.Type.STRING)
         },
         required=["customer_id"]
@@ -112,8 +113,7 @@ tool = types.Tool(
     ]
 )
 
-PROXY_URL = "http://host.docker.internal:3000/proxy"
-
+PROXY_URL = "https://g0nwr1t6u4.execute-api.ap-south-1.amazonaws.com/Prod/proxy"
 
 
 def lambda_handler(event, context):
@@ -124,7 +124,7 @@ def lambda_handler(event, context):
     authorization = (
         headers.get("Authorization")
         or headers.get("authorization")
-)
+    )
     query = body["prompt"]
 
     response = client.models.generate_content(
@@ -166,17 +166,18 @@ def lambda_handler(event, context):
         Always return a function call.
         """,
 
-            tools=[tool]
+            tools=[tool],
+            thinking_config=types.ThinkingConfig(thinking_budget=0)
 
         )
     )
 
     candidate = response.candidates[0]
 
-
     if not candidate.content.parts:
         return {
             "statusCode": 400,
+            "headers": CORS_HEADERS,
             "body": json.dumps({"message": "Gemini returned no content."})
         }
 
@@ -186,18 +187,14 @@ def lambda_handler(event, context):
 
         print(part.function_call)
 
-        
-        
-
         args = dict(part.function_call.args)
         tool_name = part.function_call.name
 
         print("Selected Tool:", tool_name)
-
         print("Arguments:", args)
         print("Function arguments:", args)
 
-        headers = {
+        proxy_headers = {
             "Authorization": authorization,
             "Content-Type": "application/json"
         }
@@ -209,7 +206,7 @@ def lambda_handler(event, context):
 
                 response = requests.get(
                     f"{PROXY_URL}/customers/{args['customer_id']}",
-                    headers=headers
+                    headers=proxy_headers
                 )
 
             else:
@@ -223,7 +220,7 @@ def lambda_handler(event, context):
                 response = requests.get(
                     f"{PROXY_URL}/customers",
                     params=filters,
-                    headers=headers
+                    headers=proxy_headers
                 )
 
         elif tool_name == "UPDATE_CUSTOMER":
@@ -233,27 +230,26 @@ def lambda_handler(event, context):
             response = requests.put(
                 f"{PROXY_URL}/customers/{customer_id}",
                 json=args,
-                headers=headers
+                headers=proxy_headers
             )
 
         elif tool_name == "DELETE_CUSTOMER":
 
             response = requests.delete(
                 f"{PROXY_URL}/customers/{args['customer_id']}",
-                headers=headers
+                headers=proxy_headers
             )
 
         else:
 
             return {
-                "statusCode":400,
-                "body":json.dumps({
-                    "status":"ERROR",
-                    "reason":"Unsupported tool."
+                "statusCode": 400,
+                "headers": CORS_HEADERS,
+                "body": json.dumps({
+                    "status": "ERROR",
+                    "reason": "Unsupported tool."
                 })
             }
-
-            
 
         try:
             proxy_result = response.json()
@@ -261,11 +257,13 @@ def lambda_handler(event, context):
             proxy_result = {
                 "status": "ERROR",
                 "reason": response.text
-    }
+            }
 
         return {
 
             "statusCode": response.status_code,
+
+            "headers": CORS_HEADERS,
 
             "body": json.dumps({
 
@@ -289,6 +287,7 @@ def lambda_handler(event, context):
     print(candidate.content)
     return {
         "statusCode": 400,
+        "headers": CORS_HEADERS,
         "body": json.dumps({
             "message": "No tool selected."
         })

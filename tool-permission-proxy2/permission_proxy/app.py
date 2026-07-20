@@ -9,7 +9,14 @@ from audit import (
     create_security_alert
 )
 
-CRM_BASE_URL = "http://host.docker.internal:3000"
+CRM_BASE_URL = "https://g0nwr1t6u4.execute-api.ap-south-1.amazonaws.com/Prod"
+
+CORS_HEADERS = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE"
+}
 
 
 def lambda_handler(event, context):
@@ -20,16 +27,14 @@ def lambda_handler(event, context):
     headers = event.get("headers", {})
 
     auth_header = (
-    headers.get("Authorization")
-    or headers.get("authorization")
-)
+        headers.get("Authorization")
+        or headers.get("authorization")
+    )
 
     if not auth_header:
         return {
             "statusCode": 401,
-            "headers": {
-                "Content-Type": "application/json"
-            },
+            "headers": CORS_HEADERS,
             "body": json.dumps({
                 "status": "DENIED",
                 "reason": "Missing Authorization header",
@@ -44,9 +49,7 @@ def lambda_handler(event, context):
     except Exception:
         return {
             "statusCode": 401,
-            "headers": {
-                "Content-Type": "application/json"
-            },
+            "headers": CORS_HEADERS,
             "body": json.dumps({
                 "status": "DENIED",
                 "reason": "Invalid JWT",
@@ -67,10 +70,11 @@ def lambda_handler(event, context):
 
     if not path:
         return {
-            "statusCode":400,
-            "body":json.dumps({
-                "status":"ERROR",
-                "reason":"Missing proxy path."
+            "statusCode": 400,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "status": "ERROR",
+                "reason": "Missing proxy path."
             })
         }
 
@@ -98,6 +102,7 @@ def lambda_handler(event, context):
     else:
         return {
             "statusCode": 405,
+            "headers": CORS_HEADERS,
             "body": json.dumps({
                 "message": "Method Not Allowed"
             })
@@ -134,20 +139,13 @@ def lambda_handler(event, context):
             )
 
         return {
-            "statusCode":403,
-            "headers":{
-                "Content-Type":"application/json"
-            },
-            "body":json.dumps({
-
-                "status":"DENIED",
-
-                "reason":f"{tool} is not permitted for {role}",
-
-                "role":role,
-
-                "data":None
-
+            "statusCode": 403,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "status": "DENIED",
+                "reason": f"{tool} is not permitted for {role}",
+                "role": role,
+                "data": None
             })
         }
 
@@ -208,25 +206,16 @@ def lambda_handler(event, context):
             reason = "CRM request failed"
     except Exception:
         crm_data = response.text
+        status = "ERROR"
+        reason = "CRM response was not valid JSON"
 
     return {
-
         "statusCode": response.status_code,
-
-        "headers":{
-            "Content-Type":"application/json"
-        },
-
-        "body":json.dumps({
-
-            "status":"ALLOWED",
-
-            "reason":"Permission granted",
-
-            "role":role,
-
-            "data":crm_data
-
+        "headers": CORS_HEADERS,
+        "body": json.dumps({
+            "status": status,
+            "reason": reason,
+            "role": role,
+            "data": crm_data
         })
-
     }
