@@ -1,5 +1,9 @@
 link - https://main.d33nxciktfjj9q.amplifyapp.com
 
+customer- https://g0nwr1t6u4.execute-api.ap-south-1.amazonaws.com/Prod/customers
+audit-https://g0nwr1t6u4.execute-api.ap-south-1.amazonaws.com/Prod/audit
+security-alerts-https://g0nwr1t6u4.execute-api.ap-south-1.amazonaws.com/Prod/security-alerts
+
 # AI Permission Proxy for Secure Tool Governance
 
 An AI-powered permission proxy built on AWS Serverless that enforces role-based access control (RBAC) for AI agents before they interact with enterprise CRM tools.
