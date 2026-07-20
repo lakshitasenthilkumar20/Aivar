@@ -1,0 +1,8 @@
+"alert_id","alert_type","denied_count","resource","role","status","timestamp","tool","user"
+"06721c69-466b-431a-9a88-ee703d8345b6","REPEATED_DENIED_ACCESS","7","customers/1002","support_agent","OPEN","2026-07-20T03:12:05.310884Z","DELETE_CUSTOMER","support"
+"2ad8b7ab-de9b-4995-9827-6d0d46ae2064","REPEATED_DENIED_ACCESS","4","customers/1002","support_agent","OPEN","2026-07-20T03:11:58.810687Z","DELETE_CUSTOMER","support"
+"6a012a94-6e92-4f8d-ad7c-c0f8441febc7","REPEATED_DENIED_ACCESS","3","customers/1004","support_agent","OPEN","2026-07-19T15:01:06.962382Z","DELETE_CUSTOMER","support"
+"265961f2-c6cc-4761-ae33-a9ca68c6d54e","REPEATED_DENIED_ACCESS","5","customers/1002","support_agent","OPEN","2026-07-20T03:12:01.150728Z","DELETE_CUSTOMER","support"
+"d7f977ad-9c9e-4a62-b72f-28b31cc033b8","REPEATED_DENIED_ACCESS","4","customers/1004","support_agent","OPEN","2026-07-19T15:01:09.503005Z","DELETE_CUSTOMER","support"
+"5014deca-2fe0-4b49-a2b0-3305804b3dca","REPEATED_DENIED_ACCESS","3","customers/1003","support_agent","OPEN","2026-07-20T03:10:14.471959Z","UPDATE_CUSTOMER","support"
+"ddd00e84-a3b8-4f42-b8ac-266f96586c7f","REPEATED_DENIED_ACCESS","6","customers/1002","support_agent","OPEN","2026-07-20T03:12:03.350875Z","DELETE_CUSTOMER","support"
